@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle of the Bedside Games - Medical Educational Games</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        header {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            text-align: center;
+            color: white;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            margin-bottom: 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .intro-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .intro-section h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .intro-section p {
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .game-card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .game-card-header h3 {
+            font-size: 1.3rem;
+        }
+
+        .game-card-body {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-card-body p {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+
+        .game-card-footer {
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .play-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            width: 100%;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .play-btn:active {
+            transform: scale(0.98);
+        }
+
+        .difficulty {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .difficulty.beginner {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .difficulty.intermediate {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .difficulty.advanced {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        footer a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+        }
+
+        .stat-box .number {
+            font-size: 2rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-box .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🏥 Battle of the Bedside Games</h1>
+        <p>Master Critical Medical Decisions Through Interactive Gaming</p>
+        <div class="stats">
+            <div class="stat-box">
+                <span class="number">5</span>
+                <span class="label">Games</span>
+            </div>
+            <div class="stat-box">
+                <span class="number">SP26</span>
+                <span class="label">Spring 2026</span>
+            </div>
+            <div class="stat-box">
+                <span class="number">100%</span>
+                <span class="label">Free</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="intro-section">
+            <h2>Welcome to Medical Education Through Gaming</h2>
+            <p>
+                Challenge yourself with clinically-inspired scenarios designed to test your medical knowledge 
+                and decision-making skills. Each game presents realistic bedside situations that require quick thinking 
+                and clinical judgment.
+            </p>
+        </section>
+
+        <section class="games-grid">
+            <!-- Game 1: Deal or No Pill -->
+            <div class="game-card">
+                <div class="game-card-header">
+                    <h3>💊 Deal or No Pill</h3>
+                </div>
+                <div class="game-card-body">
+                    <p>Make critical medication decisions! Choose wisely between treatment options and navigate complex pharmacological scenarios.</p>
+                    <span class="difficulty intermediate">Intermediate</span>
+                </div>
+                <div class="game-card-footer">
+                    <a href="deal_or_no_pill.html" class="play-btn">Play Game →</a>
+                </div>
+            </div>
+
+            <!-- Game 2: Don't Flatline -->
+            <div class="game-card">
+                <div class="game-card-header">
+                    <h3>❤️ Don't Flatline</h3>
+                </div>
+                <div class="game-card-body">
+                    <p>Keep your patient's heart beating! Respond to cardiac emergencies with correct interventions and timing.</p>
+                    <span class="difficulty advanced">Advanced</span>
+                </div>
+                <div class="game-card-footer">
+                    <a href="dont_flatline.html" class="play-btn">Play Game →</a>
+                </div>
+            </div>
+
+            <!-- Game 3: Prioritize or Perish -->
+            <div class="game-card">
+                <div class="game-card-header">
+                    <h3>⚡ Prioritize or Perish</h3>
+                </div>
+                <div class="game-card-body">
+                    <p>Triage multiple patients in a high-pressure environment. Prioritize care based on severity and urgency.</p>
+                    <span class="difficulty advanced">Advanced</span>
+                </div>
+                <div class="game-card-footer">
+                    <a href="prioritize_or_perish.html" class="play-btn">Play Game →</a>
+                </div>
+            </div>
+
+            <!-- Game 4: Select All or Die -->
+            <div class="game-card">
+                <div class="game-card-header">
+                    <h3>📋 Select All or Die</h3>
+                </div>
+                <div class="game-card-body">
+                    <p>Test your diagnostic skills! Identify all the correct symptoms and findings before time runs out.</p>
+                    <span class="difficulty beginner">Beginner</span>
+                </div>
+                <div class="game-card-footer">
+                    <a href="select_all_or_die.html" class="play-btn">Play Game →</a>
+                </div>
+            </div>
+
+            <!-- Game 5: The Final Defib -->
+            <div class="game-card">
+                <div class="game-card-header">
+                    <h3>⚡ The Final Defib</h3>
+                </div>
+                <div class="game-card-body">
+                    <p>Your last chance to save a life! Master defibrillation techniques and cardiac resuscitation in this high-stakes scenario.</p>
+                    <span class="difficulty advanced">Advanced</span>
+                </div>
+                <div class="game-card-footer">
+                    <a href="the_final_defib.html" class="play-btn">Play Game →</a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>🎓 Battle of the Bedside Games - Educational Medical Simulations | SP26</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">
+            <a href="https://github.com/drewski0103/Battle-of-the-Bedside-Games-SP26" target="_blank">View on GitHub</a>
+        </p>
+    </footer>
+</body>
+</html>
