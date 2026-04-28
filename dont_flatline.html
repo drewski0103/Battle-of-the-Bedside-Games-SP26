@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Don't Flatline — Battle of the Bedside</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
+
+  :root {
+    --red: #c0392b;
+    --gold: #f0a500;
+    --black: #0a0a0a;
+    --dark: #111;
+    --mid: #1a1a1a;
+    --card: #1e1e1e;
+    --white: #f0ede8;
+    --green: #00ff88;
+    --dim: #555;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ECG line background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: 
+      repeating-linear-gradient(0deg, transparent, transparent 59px, #1a1a1a 59px, #1a1a1a 60px),
+      repeating-linear-gradient(90deg, transparent, transparent 59px, #1a1a1a 59px, #1a1a1a 60px);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .header {
+    text-align: center;
+    padding: 20px 40px 10px;
+    position: relative;
+    z-index: 10;
+    border-bottom: 2px solid var(--red);
+  }
+
+  .header h1 {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 4rem;
+    color: var(--red);
+    letter-spacing: 6px;
+    text-shadow: 0 0 30px rgba(192,57,43,0.5);
+    line-height: 1;
+  }
+
+  .header .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--gold);
+    letter-spacing: 4px;
+    margin-top: 4px;
+  }
+
+  /* Scoreboard */
+  .scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 15px 40px;
+    position: relative;
+    z-index: 10;
+    flex-wrap: wrap;
+  }
+
+  .house-score {
+    background: var(--card);
+    border: 2px solid var(--dim);
+    padding: 10px 24px;
+    text-align: center;
+    min-width: 140px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .house-score.active { border-color: var(--gold); }
+  .house-score:hover { border-color: var(--gold); }
+
+  .house-name {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    color: var(--gold);
+  }
+
+  .house-points {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 2rem;
+    color: var(--white);
+    font-weight: bold;
+  }
+
+  .score-btns {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 6px;
+  }
+
+  .score-btn {
+    background: transparent;
+    border: 1px solid var(--dim);
+    color: var(--white);
+    width: 28px; height: 28px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    transition: all 0.15s;
+  }
+
+  .score-btn:hover { background: var(--red); border-color: var(--red); }
+  .score-btn.plus:hover { background: var(--green); border-color: var(--green); color: var(--black); }
+
+  /* Board */
+  .board-container {
+    padding: 20px 30px 30px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .category-header {
+    background: var(--red);
+    padding: 14px 8px;
+    text-align: center;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    color: var(--white);
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    line-height: 1.2;
+  }
+
+  .cell {
+    background: var(--card);
+    border: 2px solid #2a2a2a;
+    padding: 20px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cell::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(240,165,0,0.05));
+    pointer-events: none;
+  }
+
+  .cell:hover:not(.used) {
+    border-color: var(--gold);
+    background: #252525;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(240,165,0,0.2);
+  }
+
+  .cell .points {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 2.2rem;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+
+  .cell.used {
+    background: #0d0d0d;
+    border-color: #1a1a1a;
+    cursor: default;
+  }
+
+  .cell.used .points { color: #2a2a2a; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--dark);
+    border: 2px solid var(--red);
+    max-width: 780px;
+    width: 100%;
+    padding: 40px;
+    position: relative;
+    box-shadow: 0 0 60px rgba(192,57,43,0.3);
+    animation: modalIn 0.3s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-category {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--gold);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .modal-points {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 3rem;
+    color: var(--red);
+    letter-spacing: 4px;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+
+  .modal-question {
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--white);
+    margin-bottom: 30px;
+    min-height: 60px;
+  }
+
+  .answer-section {
+    display: none;
+    border-top: 1px solid #333;
+    padding-top: 20px;
+    margin-top: 10px;
+  }
+
+  .answer-section.visible { display: block; }
+
+  .answer-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--green);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .answer-text {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  .rationale-text {
+    font-size: 0.95rem;
+    color: #888;
+    margin-top: 10px;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 12px 28px;
+    border: 2px solid;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+  }
+
+  .btn-reveal { border-color: var(--gold); color: var(--gold); }
+  .btn-reveal:hover { background: var(--gold); color: var(--black); }
+
+  .btn-close { border-color: var(--red); color: var(--red); }
+  .btn-close:hover { background: var(--red); color: var(--white); }
+
+  .btn-correct { border-color: var(--green); color: var(--green); }
+  .btn-correct:hover { background: var(--green); color: var(--black); }
+
+  .close-x {
+    position: absolute;
+    top: 16px; right: 20px;
+    background: none;
+    border: none;
+    color: var(--dim);
+    font-size: 1.8rem;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .close-x:hover { color: var(--red); }
+
+  /* House selector in modal */
+  .house-selector {
+    display: none;
+    margin-top: 16px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .house-selector.visible { display: flex; }
+  .house-selector-label {
+    width: 100%;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--gold);
+    letter-spacing: 3px;
+  }
+
+  .house-btn {
+    padding: 8px 18px;
+    border: 1px solid var(--dim);
+    background: transparent;
+    color: var(--white);
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .house-btn:hover { border-color: var(--green); color: var(--green); }
+
+  /* EKG flatline animation */
+  .flatline-bar {
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--green), var(--green), transparent);
+    width: 100%;
+    margin: 10px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .flatline-bar::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60px;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, white, transparent);
+    animation: scan 2s linear infinite;
+  }
+
+  @keyframes scan {
+    to { left: 110%; }
+  }
+
+  /* Reset button */
+  .reset-btn {
+    display: block;
+    margin: 10px auto 0;
+    background: transparent;
+    border: 1px solid #333;
+    color: #555;
+    padding: 6px 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .instructions {
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: #444;
+    letter-spacing: 2px;
+    padding: 0 30px 10px;
+    position: relative;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>DON'T FLATLINE</h1>
+  <div class="subtitle">⚡ BATTLE OF THE BEDSIDE — NMJC THUNDERBIRD SCHOOL OF HEALING ARTS ⚡</div>
+  <div class="flatline-bar"></div>
+</div>
+
+<div class="scoreboard" id="scoreboard">
+  <div class="house-score" id="house0">
+    <div class="house-name">House 1</div>
+    <div class="house-points" id="score0">0</div>
+    <div class="score-btns">
+      <button class="score-btn" onclick="adjustScore(0, -100)">−</button>
+      <button class="score-btn plus" onclick="adjustScore(0, 100)">+</button>
+    </div>
+  </div>
+  <div class="house-score" id="house1">
+    <div class="house-name">House 2</div>
+    <div class="house-points" id="score1">0</div>
+    <div class="score-btns">
+      <button class="score-btn" onclick="adjustScore(1, -100)">−</button>
+      <button class="score-btn plus" onclick="adjustScore(1, 100)">+</button>
+    </div>
+  </div>
+  <div class="house-score" id="house2">
+    <div class="house-name">House 3</div>
+    <div class="house-points" id="score2">0</div>
+    <div class="score-btns">
+      <button class="score-btn" onclick="adjustScore(2, -100)">−</button>
+      <button class="score-btn plus" onclick="adjustScore(2, 100)">+</button>
+    </div>
+  </div>
+  <div class="house-score" id="house3">
+    <div class="house-name">House 4</div>
+    <div class="house-points" id="score3">0</div>
+    <div class="score-btns">
+      <button class="score-btn" onclick="adjustScore(3, -100)">−</button>
+      <button class="score-btn plus" onclick="adjustScore(3, 100)">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="instructions">CLICK A POINT VALUE TO REVEAL QUESTION • CLICK REVEAL ANSWER TO CHECK • AWARD POINTS TO CORRECT HOUSE</div>
+
+<div class="board-container">
+  <div class="board" id="board"></div>
+</div>
+
+<button class="reset-btn" onclick="resetGame()">⟳ RESET BOARD</button>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal()">×</button>
+    <div class="modal-category" id="mCategory"></div>
+    <div class="modal-points" id="mPoints"></div>
+    <div class="modal-question" id="mQuestion"></div>
+    <div class="answer-section" id="answerSection">
+      <div class="answer-label">✓ CORRECT ANSWER</div>
+      <div class="answer-text" id="mAnswer"></div>
+      <div class="rationale-text" id="mRationale"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-reveal" id="revealBtn" onclick="revealAnswer()">REVEAL ANSWER</button>
+      <button class="btn btn-close" onclick="markUsed()">MARK USED & CLOSE</button>
+    </div>
+    <div class="house-selector" id="houseSelector">
+      <div class="house-selector-label">AWARD POINTS TO:</div>
+      <button class="house-btn" onclick="awardPoints(0)">HOUSE 1</button>
+      <button class="house-btn" onclick="awardPoints(1)">HOUSE 2</button>
+      <button class="house-btn" onclick="awardPoints(2)">HOUSE 3</button>
+      <button class="house-btn" onclick="awardPoints(3)">HOUSE 4</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const categories = [
+  "PHARMACOLOGY",
+  "HEALTH ASSESSMENT",
+  "MED ADMINISTRATION",
+  "DOSAGE CALCS",
+  "CLINICAL NURSING"
+];
+
+const questions = {
+  "PHARMACOLOGY": {
+    100: {
+      q: "A patient taking tranylcypromine must avoid which food?",
+      a: "C — Aged cheddar cheese",
+      r: "MAOIs require strict avoidance of tyramine-rich foods such as aged cheeses to prevent hypertensive crisis."
+    },
+    200: {
+      q: "A patient with chronic kidney disease is on a narrow therapeutic index drug excreted by the kidneys. What is the nurse's most important action?",
+      a: "B — Monitor peak and trough drug levels",
+      r: "Impaired renal excretion increases risk of drug accumulation and toxicity. Monitoring drug levels is essential for safety."
+    },
+    300: {
+      q: "A nurse notices cloudiness forming in IV tubing when giving two medications. What is the priority action?",
+      a: "C — Stop the infusion immediately",
+      r: "Cloudiness indicates drug incompatibility and precipitate formation, which can cause emboli or harm if infused."
+    },
+    400: {
+      q: "A patient receives magnesium sulfate for severe preeclampsia. Which finding suggests magnesium toxicity?",
+      a: "B — Respiratory rate of 10 breaths per minute",
+      r: "Respiratory depression is a key sign of magnesium toxicity. Decreased reflexes and reduced urine output are also signs to monitor."
+    },
+    500: {
+      q: "A patient on tranylcypromine and a new medication presents febrile, diaphoretic, and extremely agitated. Which additional finding most strongly suggests a life-threatening complication?",
+      a: "B — Hyperreflexia and diaphoresis",
+      r: "Serotonin syndrome presents with hyperthermia, hyperreflexia, and diaphoresis — a life-threatening emergency."
+    }
+  },
+  "HEALTH ASSESSMENT": {
+    100: {
+      q: "A nurse performs a 3-item recall and clock-drawing test on an elderly patient. What assessment tool is this?",
+      a: "B — The Mini-Cog",
+      r: "The Mini-Cog consists of a 3-item recall test and a clock-drawing test used to screen for cognitive impairment."
+    },
+    200: {
+      q: "The nurse is assessing a patient for jugular vein distention. Which finding is cause for concern?",
+      a: "C — Jugular veins visible when patient is at 60-degree angle",
+      r: "Full distended external jugular veins above 45 degrees signify increased CVP as with heart failure."
+    },
+    300: {
+      q: "A nurse hears sounds like opening Velcro when auscultating breath sounds. What type of lung sounds are these?",
+      a: "B — Crackles",
+      r: "Crackles (rales) sound similar to the opening of Velcro and indicate fluid in the alveoli."
+    },
+    400: {
+      q: "A patient has an apical pulse of 102 and radial pulse of 84. What is the term for this difference?",
+      a: "D — Pulse deficit",
+      r: "Pulse deficit is calculated by subtracting the radial rate from the apical rate. A deficit indicates not all beats perfuse to the periphery."
+    },
+    500: {
+      q: "During chest expansion assessment on a 3-month-old, how does the nurse adjust the technique?",
+      a: "C — Encircle the patient's thorax with both hands",
+      r: "In infants, chest expansion is assessed by encircling the infant's thorax with both hands, unlike the adult technique."
+    }
+  },
+  "MED ADMINISTRATION": {
+    100: {
+      q: "A patient questions why a medication looks different than usual. What is the nurse's best response?",
+      a: "B — 'I will check the medication order again.'",
+      r: "Patient questions about medications may reveal an error. Never ignore these concerns — always verify."
+    },
+    200: {
+      q: "Which is correct technique when administering eye drops?",
+      a: "C — Place drops in conjunctival sac",
+      r: "Drops go into the conjunctival sac, not directly on the cornea, to prevent systemic absorption and ensure effectiveness."
+    },
+    300: {
+      q: "A nurse pulls the skin to the side before an IM injection. The family asks why. What is the best response?",
+      a: "C — 'Irritation is minimized when medications are sealed in the muscle by using the z-track method.'",
+      r: "The z-track method prevents leakage of medication into subcutaneous tissues and minimizes irritation."
+    },
+    400: {
+      q: "A nurse is administering 3 mL of a viscous medication IM to an adult. Which injection site is most appropriate?",
+      a: "B — Ventrogluteal",
+      r: "The ventrogluteal muscle is the preferred and safest injection site for all adults, especially for large-volume, viscous, and irritating medications."
+    },
+    500: {
+      q: "A patient with difficulty swallowing needs oral medication. What is the best action?",
+      a: "B — Check if the medication is available in liquid form",
+      r: "Not all medications can be safely crushed. The nurse should first determine if a liquid formulation is available. Crushing extended-release medications can cause dose dumping."
+    }
+  },
+  "DOSAGE CALCS": {
+    100: {
+      q: "Provider orders digoxin 0.125 mg PO daily. Available: digoxin 0.25 mg scored tablets. How many tablets?",
+      a: "0.5 tablet (½ tablet)",
+      r: "0.125 mg ÷ 0.25 mg/tablet = 0.5 tablet"
+    },
+    200: {
+      q: "Provider orders amoxicillin 500 mg PO q8h. Available: 250 mg/5 mL. How many mL per dose?",
+      a: "10 mL",
+      r: "500 mg ÷ 250 mg × 5 mL = 10 mL"
+    },
+    300: {
+      q: "Provider orders furosemide 1.5 mg/kg PO once daily for a patient weighing 94 lbs. Available: 10 mg/mL. How many mL?",
+      a: "6.4 mL",
+      r: "94 lbs ÷ 2.2 = 42.7 kg × 1.5 mg/kg = 64.1 mg ÷ 10 mg/mL = 6.4 mL"
+    },
+    400: {
+      q: "Provider orders ondansetron 0.15 mg/kg PO q8h PRN for a child weighing 73 lbs. Available: 4 mg/5 mL. How many mL per dose?",
+      a: "6.2 mL",
+      r: "73 ÷ 2.2 = 33.2 kg × 0.15 = 4.98 mg ÷ 4 mg × 5 mL = 6.2 mL"
+    },
+    500: {
+      q: "Provider orders prednisone 0.5 mg/kg PO daily for a patient weighing 176 lbs. Available: 10 mg tablets. How many tablets?",
+      a: "4 tablets",
+      r: "176 ÷ 2.2 = 80 kg × 0.5 mg/kg = 40 mg ÷ 10 mg/tablet = 4 tablets"
+    }
+  },
+  "CLINICAL NURSING": {
+    100: {
+      q: "A patient receiving spironolactone has a potassium level of 5.8 mEq/L. What is the nurse's priority action?",
+      a: "C — Hold the medication and notify the provider",
+      r: "A K+ of 5.8 mEq/L indicates hyperkalemia, which can lead to life-threatening cardiac dysrhythmias. Hold the medication."
+    },
+    200: {
+      q: "What is the best time for a female patient to perform a breast self-exam?",
+      a: "C — One week after her period (days 4–7 of cycle)",
+      r: "The best time is right after the menstrual period when breasts are the smallest and least congested."
+    },
+    300: {
+      q: "A patient with HIV asks about the most common opportunistic infection in AIDS. What does the nurse say?",
+      a: "C — Pneumocystis jiroveci pneumonia (PCP)",
+      r: "PCP is the most common opportunistic infection in AIDS patients and a common cause of death."
+    },
+    400: {
+      q: "A nurse notes white cheesy patches on the buccal mucosa. What does this indicate?",
+      a: "C — Candidiasis",
+      r: "Large white cheesy patches covering buccal mucosa indicate oral candidiasis (thrush), a fungal infection."
+    },
+    500: {
+      q: "A 34-year-old admitted for acute psychosis develops sudden-onset involuntary neck rigidity and inability to fully open the jaw. What is the priority action?",
+      a: "B — Administer benztropine IM",
+      r: "These are signs of acute dystonia, an extrapyramidal side effect of antipsychotics requiring immediate anticholinergic treatment (benztropine IM)."
+    }
+  }
+};
+
+const pointValues = [100, 200, 300, 400, 500];
+let scores = [0, 0, 0, 0];
+let usedCells = new Set();
+let currentCell = null;
+let currentPoints = 0;
+
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  
+  categories.forEach(cat => {
+    const header = document.createElement('div');
+    header.className = 'category-header';
+    header.textContent = cat;
+    board.appendChild(header);
+  });
+
+  pointValues.forEach(pts => {
+    categories.forEach(cat => {
+      const cell = document.createElement('div');
+      const key = `${cat}-${pts}`;
+      cell.className = 'cell' + (usedCells.has(key) ? ' used' : '');
+      cell.id = key.replace(/\s/g, '_');
+      cell.innerHTML = `<span class="points">${usedCells.has(key) ? '—' : pts}</span>`;
+      if (!usedCells.has(key)) {
+        cell.onclick = () => openQuestion(cat, pts, key);
+      }
+      board.appendChild(cell);
+    });
+  });
+}
+
+function openQuestion(cat, pts, key) {
+  currentCell = key;
+  currentPoints = pts;
+  const q = questions[cat][pts];
+  document.getElementById('mCategory').textContent = cat;
+  document.getElementById('mPoints').textContent = pts + ' PTS';
+  document.getElementById('mQuestion').textContent = q.q;
+  document.getElementById('mAnswer').textContent = q.a;
+  document.getElementById('mRationale').textContent = q.r;
+  document.getElementById('answerSection').classList.remove('visible');
+  document.getElementById('houseSelector').classList.remove('visible');
+  document.getElementById('revealBtn').style.display = 'inline-block';
+  document.getElementById('modal').classList.add('active');
+}
+
+function revealAnswer() {
+  document.getElementById('answerSection').classList.add('visible');
+  document.getElementById('houseSelector').classList.add('visible');
+  document.getElementById('revealBtn').style.display = 'none';
+}
+
+function awardPoints(houseIdx) {
+  scores[houseIdx] += currentPoints;
+  document.getElementById('score' + houseIdx).textContent = scores[houseIdx];
+  markUsed();
+}
+
+function markUsed() {
+  if (currentCell) {
+    usedCells.add(currentCell);
+    const el = document.getElementById(currentCell.replace(/\s/g, '_'));
+    if (el) {
+      el.className = 'cell used';
+      el.innerHTML = '<span class="points">—</span>';
+      el.onclick = null;
+    }
+  }
+  closeModal();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+  currentCell = null;
+}
+
+function adjustScore(idx, delta) {
+  scores[idx] = Math.max(0, scores[idx] + delta);
+  document.getElementById('score' + idx).textContent = scores[idx];
+}
+
+function resetGame() {
+  if (confirm('Reset the entire board and all scores?')) {
+    scores = [0,0,0,0];
+    usedCells.clear();
+    for(let i=0;i<4;i++) document.getElementById('score'+i).textContent = '0';
+    buildBoard();
+  }
+}
+
+buildBoard();
+</script>
+</body>
+</html>
