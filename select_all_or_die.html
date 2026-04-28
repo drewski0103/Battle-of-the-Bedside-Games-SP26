@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Select All That Apply...Or Die — Battle of the Bedside</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
+
+  :root {
+    --red: #c0392b;
+    --gold: #f0a500;
+    --black: #070707;
+    --dark: #0f0f0f;
+    --card: #141414;
+    --white: #f0ede8;
+    --green: #00e676;
+    --blue: #00b4d8;
+    --dim: #444;
+    --danger: #ff4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Scanline effect */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .header {
+    text-align: center;
+    padding: 20px 40px 10px;
+    border-bottom: 3px solid var(--danger);
+    background: linear-gradient(180deg, #1a0000 0%, transparent 100%);
+    position: relative;
+  }
+
+  .header h1 {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 3.5rem;
+    color: var(--danger);
+    letter-spacing: 4px;
+    text-shadow: 0 0 40px rgba(255,68,68,0.5), 2px 2px 0 #800000;
+    line-height: 1;
+  }
+
+  .header .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--gold);
+    letter-spacing: 4px;
+    margin-top: 4px;
+  }
+
+  /* Scoreboard */
+  .scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    padding: 12px 30px;
+    flex-wrap: wrap;
+  }
+
+  .house-score {
+    background: var(--card);
+    border: 2px solid #2a2a2a;
+    padding: 8px 18px;
+    text-align: center;
+    min-width: 115px;
+  }
+
+  .house-name { font-family: 'Bebas Neue', cursive; font-size: 1.2rem; color: var(--gold); letter-spacing: 2px; }
+  .house-points { font-family: 'Share Tech Mono', monospace; font-size: 1.8rem; color: var(--white); }
+  .score-btns { display: flex; gap: 4px; justify-content: center; margin-top: 4px; }
+  .score-btn {
+    background: transparent; border: 1px solid #333;
+    color: var(--white); width: 26px; height: 26px;
+    cursor: pointer; font-size: 1rem; font-weight: 700;
+    font-family: 'Rajdhani', sans-serif; transition: all 0.15s;
+  }
+  .score-btn:hover { background: var(--red); border-color: var(--red); }
+  .score-btn.plus:hover { background: var(--green); border-color: var(--green); color: var(--black); }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 30px;
+    flex-wrap: wrap;
+  }
+
+  .q-counter {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--gold);
+    letter-spacing: 3px;
+    background: var(--card);
+    border: 1px solid #2a2a2a;
+    padding: 8px 16px;
+  }
+
+  .ctrl-btn {
+    padding: 10px 22px;
+    border: 2px solid;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.2s;
+  }
+
+  .ctrl-btn-gold { border-color: var(--gold); color: var(--gold); }
+  .ctrl-btn-gold:hover { background: var(--gold); color: var(--black); }
+
+  .ctrl-btn-red { border-color: var(--red); color: var(--red); }
+  .ctrl-btn-red:hover { background: var(--red); color: var(--white); }
+
+  .ctrl-btn-blue { border-color: var(--blue); color: var(--blue); }
+  .ctrl-btn-blue:hover { background: var(--blue); color: var(--black); }
+
+  /* Question Card */
+  .question-area {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 30px 10px;
+  }
+
+  .q-number-badge {
+    display: inline-block;
+    background: var(--danger);
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    padding: 4px 14px;
+    margin-bottom: 12px;
+  }
+
+  .question-card {
+    background: var(--card);
+    border: 2px solid #2a2a2a;
+    border-left: 4px solid var(--danger);
+    padding: 28px 30px;
+    margin-bottom: 16px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .question-text {
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .sata-badge {
+    display: inline-block;
+    background: var(--danger);
+    color: var(--white);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    padding: 3px 10px;
+    margin-bottom: 18px;
+  }
+
+  /* Options */
+  .options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 16px;
+    background: #0e0e0e;
+    border: 2px solid #1e1e1e;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .option:hover { border-color: #444; background: #161616; }
+
+  .option.selected {
+    border-color: var(--gold);
+    background: #1a1400;
+  }
+
+  .option.correct {
+    border-color: var(--green);
+    background: #001a0a;
+  }
+
+  .option.incorrect {
+    border-color: var(--danger);
+    background: #1a0000;
+  }
+
+  .option-letter {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.4rem;
+    color: var(--dim);
+    min-width: 24px;
+    line-height: 1.2;
+    transition: color 0.15s;
+  }
+
+  .option.selected .option-letter { color: var(--gold); }
+  .option.correct .option-letter { color: var(--green); }
+  .option.incorrect .option-letter { color: var(--danger); }
+
+  .option-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #ccc;
+    line-height: 1.4;
+    transition: color 0.15s;
+  }
+
+  .option.selected .option-text { color: var(--white); }
+  .option.correct .option-text { color: var(--green); }
+  .option.incorrect .option-text { color: #888; }
+
+  .option-indicator {
+    margin-left: auto;
+    font-size: 1.2rem;
+    display: none;
+  }
+  .option.correct .option-indicator { display: block; color: var(--green); }
+  .option.incorrect .option-indicator { display: block; color: var(--danger); }
+
+  /* Answer reveal */
+  .answer-reveal {
+    display: none;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-left: 4px solid var(--green);
+    padding: 20px;
+    margin-bottom: 16px;
+    animation: fadeIn 0.3s ease;
+  }
+  .answer-reveal.visible { display: block; }
+
+  .answer-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--green);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .answer-text {
+    font-size: 1.05rem;
+    color: var(--green);
+    font-weight: 700;
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+
+  .rationale-text {
+    font-size: 0.92rem;
+    color: #777;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  /* House award */
+  .house-award {
+    display: none;
+    background: var(--card);
+    border: 1px solid #2a2a2a;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+  }
+  .house-award.visible { display: block; }
+
+  .house-award-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--gold);
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+  }
+
+  .house-award-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .house-award-btn {
+    padding: 8px 18px;
+    border: 1px solid #444;
+    background: transparent;
+    color: var(--white);
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .house-award-btn:hover { border-color: var(--green); color: var(--green); }
+
+  /* Question actions */
+  .q-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 0 30px 10px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 3px;
+    background: #1a1a1a;
+    margin: 0 30px 8px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--red), var(--gold));
+    transition: width 0.4s ease;
+  }
+
+  .instructions-line {
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: #333;
+    letter-spacing: 2px;
+    padding: 4px 30px 8px;
+  }
+
+  .reset-btn {
+    display: block; margin: 8px auto 20px;
+    background: transparent; border: 1px solid #1e1e1e;
+    color: #333; padding: 6px 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem; letter-spacing: 2px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--red); color: var(--red); }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 30px;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 2rem;
+    color: #333;
+    letter-spacing: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>SELECT ALL THAT APPLY... OR DIE</h1>
+  <div class="subtitle">☠ NCLEX-STYLE BLITZ — BATTLE OF THE BEDSIDE ☠</div>
+</div>
+
+<div class="scoreboard">
+  <div class="house-score">
+    <div class="house-name">House 1</div>
+    <div class="house-points" id="score0">0</div>
+    <div class="score-btns">
+      <button class="score-btn" onclick="adj(0,-100)">−</button>
+      <button class="score-btn plus" onclick="adj(0,100)">+</button>
+    </div>
+  </div>
+  <div class="house-score">
+    <div class="house-name">House 2</div>
+    <div class="house-points" id="score1">0</div>
+    <div class="score-btns">
+      <button class="score-btn" onclick="adj(1,-100)">−</button>
+      <button class="score-btn plus" onclick="adj(1,100)">+</button>
+    </div>
+  </div>
+  <div class="house-score">
+    <div class="house-name">House 3</div>
+    <div class="house-points" id="score2">0</div>
+    <div class="score-btns">
+      <button class="score-btn" onclick="adj(2,-100)">−</button>
+      <button class="score-btn plus" onclick="adj(2,100)">+</button>
+    </div>
+  </div>
+  <div class="house-score">
+    <div class="house-name">House 4</div>
+    <div class="house-points" id="score3">0</div>
+    <div class="score-btns">
+      <button class="score-btn" onclick="adj(3,-100)">−</button>
+      <button class="score-btn plus" onclick="adj(3,100)">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="q-counter" id="qCounter">QUESTION 1 OF 20</div>
+  <button class="ctrl-btn ctrl-btn-gold" onclick="prevQ()">◀ PREV</button>
+  <button class="ctrl-btn ctrl-btn-gold" onclick="nextQ()">NEXT ▶</button>
+  <button class="ctrl-btn ctrl-btn-blue" id="revealBtn" onclick="revealAnswer()">REVEAL ANSWER</button>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="instructions-line">READ QUESTION ALOUD → HOUSES DISCUSS → CLICK REVEAL → AWARD POINTS TO CORRECT HOUSE</div>
+
+<div class="question-area">
+  <div id="qBadge" class="q-number-badge">QUESTION 1</div>
+  <div class="question-card">
+    <div class="question-text" id="questionText"></div>
+    <div class="sata-badge" id="sataBadge">SELECT ALL THAT APPLY</div>
+    <div class="options-grid" id="optionsGrid"></div>
+  </div>
+
+  <div class="answer-reveal" id="answerReveal">
+    <div class="answer-label">✓ CORRECT ANSWERS</div>
+    <div class="answer-text" id="answerText"></div>
+    <div class="rationale-text" id="rationaleText"></div>
+  </div>
+
+  <div class="house-award" id="houseAward">
+    <div class="house-award-label">AWARD 200 POINTS TO:</div>
+    <div class="house-award-btns">
+      <button class="house-award-btn" onclick="award(0)">HOUSE 1</button>
+      <button class="house-award-btn" onclick="award(1)">HOUSE 2</button>
+      <button class="house-award-btn" onclick="award(2)">HOUSE 3</button>
+      <button class="house-award-btn" onclick="award(3)">HOUSE 4</button>
+    </div>
+  </div>
+</div>
+
+<div class="q-actions">
+  <button class="ctrl-btn ctrl-btn-gold" onclick="prevQ()">◀ PREVIOUS QUESTION</button>
+  <button class="ctrl-btn ctrl-btn-gold" onclick="nextQ()">NEXT QUESTION ▶</button>
+</div>
+<button class="reset-btn" onclick="resetGame()">⟳ RESET SCORES</button>
+
+<script>
+const questions = [
+  {
+    q: "Which medications potentiate inhibitory neurotransmission to manage acute alcohol withdrawal, status epilepticus, or insomnia? (Select all that apply)",
+    type: "sata",
+    options: ["Phenytoin", "Phenobarbital", "Diazepam", "Vigabatrin", "Disulfiram"],
+    correct: [1,2,3],
+    answer: "B — Phenobarbital, C — Diazepam, D — Vigabatrin",
+    rationale: "Phenobarbital, diazepam, and vigabatrin increase GABA activity which decreases seizure activity and potentiates inhibitory neurotransmission."
+  },
+  {
+    q: "A patient with Alzheimer's disease is on donepezil. Which findings should the nurse monitor for during titration as signs of cholinergic excess? (Select all that apply)",
+    type: "sata",
+    options: ["Bradycardia", "Syncope", "Hypertension", "Gastrointestinal upset", "Chronic diarrhea"],
+    correct: [0,1,3],
+    answer: "A — Bradycardia, B — Syncope, D — Gastrointestinal upset",
+    rationale: "Donepezil increases acetylcholine and may cause bradycardia, syncope, and GI effects. Hypertension is not a cholinergic effect."
+  },
+  {
+    q: "Which agents are first-line benzodiazepines for acute status epilepticus or severe alcohol withdrawal? (Select all that apply)",
+    type: "sata",
+    options: ["Diazepam", "Lorazepam", "Phenobarbital", "Phenytoin", "Disulfiram"],
+    correct: [0,1],
+    answer: "A — Diazepam, B — Lorazepam",
+    rationale: "Diazepam and lorazepam are the first-line benzodiazepines for seizure control and severe alcohol withdrawal. Phenobarbital is a barbiturate, not a benzo."
+  },
+  {
+    q: "Which nursing interventions are appropriate when administering diuretics to a patient in the ICU? (Select all that apply)",
+    type: "sata",
+    options: ["Monitor daily weight", "Check electrolyte levels", "Administer at bedtime", "Monitor blood pressure", "Assess intake and output", "Increase baseline fluid intake"],
+    correct: [0,1,3,4],
+    answer: "A — Monitor daily weight, B — Check electrolytes, D — Monitor BP, E — Assess I&O",
+    rationale: "Monitoring weight, electrolytes, BP, and I&O is essential. Diuretics should NOT be given at bedtime (causes nocturia), and increasing fluids contradicts the mechanism."
+  },
+  {
+    q: "Which actions are expected from medications used to treat glaucoma? (Select all that apply)",
+    type: "sata",
+    options: ["Increase outflow of aqueous humor", "Increase intraocular pressure", "Decrease production of intraocular fluid", "Constrict the pupil", "Constrict blood vessels"],
+    correct: [0,2,3],
+    answer: "A — Increase outflow, C — Decrease production, D — Constrict pupil",
+    rationale: "Glaucoma medications lower IOP via multiple mechanisms: miotics (pupil constriction), beta blockers, and prostaglandins that increase outflow or decrease production."
+  },
+  {
+    q: "Which nursing actions help prevent infection when administering eye drops? (Select all that apply)",
+    type: "sata",
+    options: ["Wash hands before administration", "Touch dropper tip to eye", "Avoid contaminating dropper against the eye", "Administer to conjunctival sac without touching inner eye", "Share medications with patients who have similar diagnosis"],
+    correct: [0,2,3],
+    answer: "A — Wash hands, C — Avoid contaminating dropper, D — Administer to conjunctival sac",
+    rationale: "Preventing contamination is essential for infection control. NEVER touch dropper to eye, and NEVER share ophthalmic medications between patients."
+  },
+  {
+    q: "Which statements about fat-soluble vitamins are correct? (Select all that apply)",
+    type: "sata",
+    options: ["Stored in fatty tissue", "Excreted rapidly in urine", "Can accumulate to toxic levels", "Require daily intake", "Includes vitamin A", "Includes vitamin C"],
+    correct: [0,2,4],
+    answer: "A — Stored in fatty tissue, C — Can accumulate to toxic levels, E — Includes vitamin A",
+    rationale: "Fat-soluble vitamins (A, D, E, K) are stored in fatty tissue and can accumulate to toxic levels. Vitamin C is water-soluble."
+  },
+  {
+    q: "Which therapies are classified as complementary and alternative medicine (CAM)? (Select all that apply)",
+    type: "sata",
+    options: ["Yoga", "Aromatherapy", "Reflexology", "Antibiotics", "Massage Therapy", "Acupuncture", "Oxygen", "IV Fluids"],
+    correct: [0,1,2,4,5],
+    answer: "A — Yoga, B — Aromatherapy, C — Reflexology, E — Massage Therapy, F — Acupuncture",
+    rationale: "CAM includes non-conventional therapies. Antibiotics, oxygen, and IV fluids are conventional Western medical treatments."
+  },
+  {
+    q: "Which medication classes are used to treat nausea and vomiting? (Select all that apply)",
+    type: "sata",
+    options: ["Phenothiazines", "Antihistamines", "Anticholinergics", "Proton Pump Inhibitors", "5-HT3 Receptor Antagonists"],
+    correct: [0,1,2,4],
+    answer: "A — Phenothiazines, B — Antihistamines, C — Anticholinergics, E — 5-HT3 Antagonists",
+    rationale: "Multiple classes target different vomiting pathways. PPIs treat acid-related conditions, not nausea/vomiting directly."
+  },
+  {
+    q: "Which statements are correct about cephalosporins? (Select all that apply)",
+    type: "sata",
+    options: ["Similar to penicillins", "No cross-sensitivity with penicillin", "Classified into generations", "Can cause hypersensitivity reactions", "Used for gram-positive and gram-negative infections"],
+    correct: [0,2,3,4],
+    answer: "A — Similar to penicillins, C — Classified into generations, D — Can cause hypersensitivity, E — Used for G+ and G- infections",
+    rationale: "Cross-reactivity CAN occur between penicillins and cephalosporins, especially early generations. Always ask about penicillin allergy before giving cephalosporins."
+  },
+  {
+    q: "Which are expected effects of muscle relaxants such as cyclobenzaprine? (Select all that apply)",
+    type: "sata",
+    options: ["Sedation", "Hypotension", "Increased alertness", "Dizziness", "Muscle relaxation"],
+    correct: [0,1,3,4],
+    answer: "A — Sedation, B — Hypotension, D — Dizziness, E — Muscle relaxation",
+    rationale: "CNS depression is common with muscle relaxants → sedation, dizziness, hypotension. Increased alertness is the opposite of the expected effect."
+  },
+  {
+    q: "Which treatments may be used for fibromyalgia? (Select all that apply)",
+    type: "sata",
+    options: ["Antidepressants", "NSAIDs", "Physical therapy", "Antibiotics", "Trigger point injections"],
+    correct: [0,1,2,4],
+    answer: "A — Antidepressants, B — NSAIDs, C — Physical therapy, E — Trigger point injections",
+    rationale: "Fibromyalgia requires multimodal management. Antibiotics have no role as fibromyalgia is not an infectious condition."
+  },
+  {
+    q: "Which interventions help prevent infection in a patient with cancer? (Select all that apply)",
+    type: "sata",
+    options: ["Avoid crowds", "Monitor for WBC count", "Encourage hand hygiene", "Administer live vaccines", "Assess for fever"],
+    correct: [0,1,2,4],
+    answer: "A — Avoid crowds, B — Monitor WBC, C — Encourage hand hygiene, E — Assess for fever",
+    rationale: "These methods decrease risk of secondary infection due to immunosuppression. Live vaccines are contraindicated in immunocompromised patients."
+  },
+  {
+    q: "Which are examples of a portal of entry for infection? (Select all that apply)",
+    type: "sata",
+    options: ["Surgical incision", "Central line IV insertion site", "Intact skin", "Urinary catheter insertion site", "Respiratory Tract"],
+    correct: [0,1,3,4],
+    answer: "A — Surgical incision, B — Central line, D — Urinary catheter, E — Respiratory tract",
+    rationale: "Intact skin is a barrier that PREVENTS infection, not a portal of entry. Breaks in skin, invasive lines, and body openings are portals of entry."
+  },
+  {
+    q: "Which characteristics are associated with malignant cells? (Select all that apply)",
+    type: "sata",
+    options: ["Loss of differentiation", "Controlled mitosis", "Ability to metastasize", "Loss of contact inhibition", "Dependence on homeostatic regulation"],
+    correct: [0,2,3],
+    answer: "A — Loss of differentiation, C — Ability to metastasize, D — Loss of contact inhibition",
+    rationale: "Malignant cells lose regulation, invade and spread. They have uncontrolled mitosis, not controlled — and they are NOT dependent on homeostatic regulation."
+  },
+  {
+    q: "Which nursing actions will help prevent a needlestick injury? (Select all that apply)",
+    type: "sata",
+    options: ["Never force needles into sharps container", "Recap the needle after injection", "Engage needle safety mechanism immediately after injection", "Use needleless devices whenever possible", "Remove needle and dispose only the needle in sharps"],
+    correct: [0,2,3],
+    answer: "A — Never force needles, C — Engage safety mechanism, D — Use needleless devices",
+    rationale: "NEVER recap needles after use. Immediately dispose of entire assembly into sharps container. Use needleless systems whenever available."
+  },
+  {
+    q: "Which techniques are appropriate for intramuscular injections? (Select all that apply)",
+    type: "sata",
+    options: ["Insert needle at 15-degree angle", "Use z-track method", "Lightly massage site after every injection", "Aspirate to ensure not in a vessel", "Hold pressure after injecting"],
+    correct: [1,3],
+    answer: "B — Use z-track method, D — Aspirate to ensure not in vessel",
+    rationale: "Z-track prevents leakage and irritation. Aspiration confirms proper placement. IM injections are given at 90 degrees, and massage is NOT always recommended (can damage tissue)."
+  },
+  {
+    q: "Which findings should a nurse follow up on after removal of a urinary catheter? (Select all that apply)",
+    type: "sata",
+    options: ["Unable to void within 6-8 hours", "Has sensation of not emptying", "Voiding in small amounts", "Increasing fluid intake", "Burning with the first couple of voids"],
+    correct: [0,1,2],
+    answer: "A — Unable to void 6-8 hrs, B — Sensation of not emptying, C — Voiding in small amounts",
+    rationale: "These are signs of urinary retention or incomplete emptying after catheter removal. Increasing fluid intake and mild initial burning are expected and not concerning."
+  },
+  {
+    q: "Which items of PPE should the nurse don for a patient on airborne precautions? (Select all that apply)",
+    type: "sata",
+    options: ["Gown", "Gloves", "N95 Mask", "Goggles", "Regular face mask"],
+    correct: [0,2],
+    answer: "A — Gown, C — N95 Mask",
+    rationale: "Airborne precautions require an N95 respirator (not a regular mask) and gown. Gloves and goggles are added for standard precautions based on procedure."
+  },
+  {
+    q: "Which are assessed during the general survey? (Select all that apply)",
+    type: "sata",
+    options: ["Physical appearance", "Ethnicity", "Gender", "Body structure", "Mobility", "Behavior"],
+    correct: [0,3,4,5],
+    answer: "A — Physical appearance, D — Body structure, E — Mobility, F — Behavior",
+    rationale: "The general survey is a study of the whole person: general health state, physical appearance, body structure, mobility, and behavior — not specific demographic categories."
+  }
+];
+
+let scores = [0,0,0,0];
+let currentQ = 0;
+let answered = new Array(questions.length).fill(false);
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qBadge').textContent = `QUESTION ${currentQ + 1}`;
+  document.getElementById('qCounter').textContent = `QUESTION ${currentQ+1} OF ${questions.length}`;
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('sataBadge').textContent = q.type === 'sata' ? 'SELECT ALL THAT APPLY' : 'MULTIPLE CHOICE';
+  document.getElementById('progressFill').style.width = `${((currentQ+1)/questions.length)*100}%`;
+
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  const letters = ['A','B','C','D','E','F','G','H'];
+
+  q.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    const isShown = answered[currentQ];
+    const isCorrect = q.correct.includes(i);
+    div.className = 'option' + (isShown ? (isCorrect ? ' correct' : ' incorrect') : '');
+    div.innerHTML = `
+      <div class="option-letter">${letters[i]}</div>
+      <div class="option-text">${opt}</div>
+      <div class="option-indicator">${isCorrect ? '✓' : '✗'}</div>
+    `;
+    grid.appendChild(div);
+  });
+
+  const revealSection = document.getElementById('answerReveal');
+  const houseAward = document.getElementById('houseAward');
+
+  if (answered[currentQ]) {
+    document.getElementById('answerText').textContent = q.answer;
+    document.getElementById('rationaleText').textContent = q.rationale;
+    revealSection.classList.add('visible');
+    houseAward.classList.add('visible');
+    document.getElementById('revealBtn').style.display = 'none';
+  } else {
+    revealSection.classList.remove('visible');
+    houseAward.classList.remove('visible');
+    document.getElementById('revealBtn').style.display = 'inline-block';
+  }
+}
+
+function revealAnswer() {
+  answered[currentQ] = true;
+  renderQuestion();
+}
+
+function nextQ() {
+  if (currentQ < questions.length - 1) {
+    currentQ++;
+    renderQuestion();
+  }
+}
+
+function prevQ() {
+  if (currentQ > 0) {
+    currentQ--;
+    renderQuestion();
+  }
+}
+
+function award(houseIdx) {
+  scores[houseIdx] += 200;
+  document.getElementById('score'+houseIdx).textContent = scores[houseIdx];
+  nextQ();
+}
+
+function adj(i, d) {
+  scores[i] = Math.max(0, scores[i] + d);
+  document.getElementById('score'+i).textContent = scores[i];
+}
+
+function resetGame() {
+  if (confirm('Reset all scores and question progress?')) {
+    scores = [0,0,0,0];
+    answered = new Array(questions.length).fill(false);
+    currentQ = 0;
+    for(let i=0;i<4;i++) document.getElementById('score'+i).textContent='0';
+    renderQuestion();
+  }
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
